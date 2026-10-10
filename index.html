@@ -13,7 +13,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
     <style>
         body { font-family: 'Inter', sans-serif; transition: background-color 0.3s, color 0.3s; }
-        .chart-container { position: relative; height: 300px; width: 100%; }
+        .chart-container { position: relative; height: 350px; width: 100%; }
     </style>
 </head>
 <body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 p-6 min-h-screen">
@@ -38,22 +38,22 @@
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
             <div class="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
                 <p class="text-slate-500 dark:text-slate-400 text-xs font-semibold uppercase tracking-wider">Top Volume Source</p>
-                <p class="text-2xl font-bold text-slate-800 dark:text-white mt-1">Referral</p>
-                <p class="text-emerald-600 dark:text-emerald-400 text-sm mt-1">30 leads</p>
+                <p class="text-3xl font-extrabold text-slate-800 dark:text-white mt-1">Referral</p>
+                <p class="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1">30 <span class="text-sm font-medium text-slate-500 dark:text-slate-400">leads</span></p>
             </div>
             <div class="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
                 <p class="text-slate-500 dark:text-slate-400 text-xs font-semibold uppercase tracking-wider">Top Revenue Source</p>
-                <p class="text-2xl font-bold text-slate-800 dark:text-white mt-1">Instagram Ad</p>
-                <p class="text-emerald-600 dark:text-emerald-400 text-sm mt-1">$176,500</p>
+                <p class="text-3xl font-extrabold text-slate-800 dark:text-white mt-1">Instagram Ad</p>
+                <p class="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1">$176,500</p>
             </div>
             <div class="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
                 <p class="text-slate-500 dark:text-slate-400 text-xs font-semibold uppercase tracking-wider">Total Sources Tracked</p>
-                <p class="text-2xl font-bold text-slate-800 dark:text-white mt-1">9</p>
+                <p class="text-3xl font-extrabold text-slate-800 dark:text-white mt-1">9</p>
                 <p class="text-slate-500 dark:text-slate-400 text-sm mt-1">Channels active</p>
             </div>
             <div class="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
                 <p class="text-slate-500 dark:text-slate-400 text-xs font-semibold uppercase tracking-wider">Data Integrity</p>
-                <p class="text-2xl font-bold text-slate-800 dark:text-white mt-1">94%</p>
+                <p class="text-3xl font-extrabold text-slate-800 dark:text-white mt-1">94%</p>
                 <p class="text-slate-500 dark:text-slate-400 text-sm mt-1">Valid records kept</p>
             </div>
         </div>
@@ -88,70 +88,71 @@
         <div class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm mb-6">
             <h2 class="text-lg font-semibold text-slate-800 dark:text-white mb-4">Pipeline Progression: 8-Stage Breakdown by Source</h2>
             <div class="overflow-x-auto">
-                <table class="w-full text-sm text-left text-slate-600 dark:text-slate-300">
+                <!-- FIXED: Changed text-sm to text-base for larger, cleaner numbers -->
+                <table class="w-full text-base text-left text-slate-600 dark:text-slate-300">
                     <thead class="text-xs text-slate-500 dark:text-slate-400 uppercase bg-slate-50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-700">
                         
 <tr>
-    <th scope="col" class="px-4 py-3 rounded-l-lg">Source</th>
-    <th scope="col" class="px-4 py-3">Qualified Opt In</th><th scope="col" class="px-4 py-3">Booked call</th><th scope="col" class="px-4 py-3">Follow Up</th><th scope="col" class="px-4 py-3">Closed</th><th scope="col" class="px-4 py-3">Disqualified</th><th scope="col" class="px-4 py-3">No Show</th><th scope="col" class="px-4 py-3">Lost</th><th scope="col" class="px-4 py-3">Cancelled</th>
-    <th scope="col" class="px-4 py-3 rounded-r-lg">Total</th>
+    <th scope="col" class="px-4 py-3 rounded-l-lg text-xs">Source</th>
+    <th scope="col" class="px-4 py-3 text-xs">Qualified Opt In</th><th scope="col" class="px-4 py-3 text-xs">Booked call</th><th scope="col" class="px-4 py-3 text-xs">Follow Up</th><th scope="col" class="px-4 py-3 text-xs">Closed</th><th scope="col" class="px-4 py-3 text-xs">Disqualified</th><th scope="col" class="px-4 py-3 text-xs">No Show</th><th scope="col" class="px-4 py-3 text-xs">Lost</th><th scope="col" class="px-4 py-3 text-xs">Cancelled</th>
+    <th scope="col" class="px-4 py-3 rounded-r-lg text-xs">Total</th>
 </tr>
 
                     </thead>
                     <tbody>
                         
     <tr class="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50">
-        <td class="px-4 py-3 font-medium text-slate-800 dark:text-white">Billboard</td>
-        <td class="px-4 py-3">4</td><td class="px-4 py-3">5</td><td class="px-4 py-3">5</td><td class="px-4 py-3">4</td><td class="px-4 py-3">1</td><td class="px-4 py-3">2</td><td class="px-4 py-3">2</td><td class="px-4 py-3">1</td>
-        <td class="px-4 py-3 font-bold text-emerald-600 dark:text-emerald-400">24</td>
+        <td class="px-4 py-4 font-medium text-slate-800 dark:text-white text-base">Billboard</td>
+        <td class="px-4 py-4 text-base text-slate-600 dark:text-slate-300">4</td><td class="px-4 py-4 text-base text-slate-600 dark:text-slate-300">5</td><td class="px-4 py-4 text-base text-slate-600 dark:text-slate-300">5</td><td class="px-4 py-4 text-base text-slate-600 dark:text-slate-300">4</td><td class="px-4 py-4 text-base text-slate-600 dark:text-slate-300">1</td><td class="px-4 py-4 text-base text-slate-600 dark:text-slate-300">2</td><td class="px-4 py-4 text-base text-slate-600 dark:text-slate-300">2</td><td class="px-4 py-4 text-base text-slate-600 dark:text-slate-300">1</td>
+        <td class="px-4 py-4 font-bold text-emerald-600 dark:text-emerald-400 text-base">24</td>
     </tr>
     
     <tr class="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50">
-        <td class="px-4 py-3 font-medium text-slate-800 dark:text-white">Cold Email</td>
-        <td class="px-4 py-3">3</td><td class="px-4 py-3">2</td><td class="px-4 py-3">5</td><td class="px-4 py-3">2</td><td class="px-4 py-3">5</td><td class="px-4 py-3">3</td><td class="px-4 py-3">0</td><td class="px-4 py-3">2</td>
-        <td class="px-4 py-3 font-bold text-emerald-600 dark:text-emerald-400">22</td>
+        <td class="px-4 py-4 font-medium text-slate-800 dark:text-white text-base">Cold Email</td>
+        <td class="px-4 py-4 text-base text-slate-600 dark:text-slate-300">3</td><td class="px-4 py-4 text-base text-slate-600 dark:text-slate-300">2</td><td class="px-4 py-4 text-base text-slate-600 dark:text-slate-300">5</td><td class="px-4 py-4 text-base text-slate-600 dark:text-slate-300">2</td><td class="px-4 py-4 text-base text-slate-600 dark:text-slate-300">5</td><td class="px-4 py-4 text-base text-slate-600 dark:text-slate-300">3</td><td class="px-4 py-4 text-base text-slate-600 dark:text-slate-300">0</td><td class="px-4 py-4 text-base text-slate-600 dark:text-slate-300">2</td>
+        <td class="px-4 py-4 font-bold text-emerald-600 dark:text-emerald-400 text-base">22</td>
     </tr>
     
     <tr class="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50">
-        <td class="px-4 py-3 font-medium text-slate-800 dark:text-white">Facebook Ad</td>
-        <td class="px-4 py-3">4</td><td class="px-4 py-3">5</td><td class="px-4 py-3">2</td><td class="px-4 py-3">3</td><td class="px-4 py-3">2</td><td class="px-4 py-3">4</td><td class="px-4 py-3">2</td><td class="px-4 py-3">2</td>
-        <td class="px-4 py-3 font-bold text-emerald-600 dark:text-emerald-400">24</td>
+        <td class="px-4 py-4 font-medium text-slate-800 dark:text-white text-base">Facebook Ad</td>
+        <td class="px-4 py-4 text-base text-slate-600 dark:text-slate-300">4</td><td class="px-4 py-4 text-base text-slate-600 dark:text-slate-300">5</td><td class="px-4 py-4 text-base text-slate-600 dark:text-slate-300">2</td><td class="px-4 py-4 text-base text-slate-600 dark:text-slate-300">3</td><td class="px-4 py-4 text-base text-slate-600 dark:text-slate-300">2</td><td class="px-4 py-4 text-base text-slate-600 dark:text-slate-300">4</td><td class="px-4 py-4 text-base text-slate-600 dark:text-slate-300">2</td><td class="px-4 py-4 text-base text-slate-600 dark:text-slate-300">2</td>
+        <td class="px-4 py-4 font-bold text-emerald-600 dark:text-emerald-400 text-base">24</td>
     </tr>
     
     <tr class="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50">
-        <td class="px-4 py-3 font-medium text-slate-800 dark:text-white">Google Search</td>
-        <td class="px-4 py-3">6</td><td class="px-4 py-3">5</td><td class="px-4 py-3">3</td><td class="px-4 py-3">4</td><td class="px-4 py-3">2</td><td class="px-4 py-3">0</td><td class="px-4 py-3">1</td><td class="px-4 py-3">0</td>
-        <td class="px-4 py-3 font-bold text-emerald-600 dark:text-emerald-400">21</td>
+        <td class="px-4 py-4 font-medium text-slate-800 dark:text-white text-base">Google Search</td>
+        <td class="px-4 py-4 text-base text-slate-600 dark:text-slate-300">6</td><td class="px-4 py-4 text-base text-slate-600 dark:text-slate-300">5</td><td class="px-4 py-4 text-base text-slate-600 dark:text-slate-300">3</td><td class="px-4 py-4 text-base text-slate-600 dark:text-slate-300">4</td><td class="px-4 py-4 text-base text-slate-600 dark:text-slate-300">2</td><td class="px-4 py-4 text-base text-slate-600 dark:text-slate-300">0</td><td class="px-4 py-4 text-base text-slate-600 dark:text-slate-300">1</td><td class="px-4 py-4 text-base text-slate-600 dark:text-slate-300">0</td>
+        <td class="px-4 py-4 font-bold text-emerald-600 dark:text-emerald-400 text-base">21</td>
     </tr>
     
     <tr class="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50">
-        <td class="px-4 py-3 font-medium text-slate-800 dark:text-white">Instagram Ad</td>
-        <td class="px-4 py-3">6</td><td class="px-4 py-3">1</td><td class="px-4 py-3">5</td><td class="px-4 py-3">5</td><td class="px-4 py-3">2</td><td class="px-4 py-3">1</td><td class="px-4 py-3">2</td><td class="px-4 py-3">0</td>
-        <td class="px-4 py-3 font-bold text-emerald-600 dark:text-emerald-400">22</td>
+        <td class="px-4 py-4 font-medium text-slate-800 dark:text-white text-base">Instagram Ad</td>
+        <td class="px-4 py-4 text-base text-slate-600 dark:text-slate-300">6</td><td class="px-4 py-4 text-base text-slate-600 dark:text-slate-300">1</td><td class="px-4 py-4 text-base text-slate-600 dark:text-slate-300">5</td><td class="px-4 py-4 text-base text-slate-600 dark:text-slate-300">5</td><td class="px-4 py-4 text-base text-slate-600 dark:text-slate-300">2</td><td class="px-4 py-4 text-base text-slate-600 dark:text-slate-300">1</td><td class="px-4 py-4 text-base text-slate-600 dark:text-slate-300">2</td><td class="px-4 py-4 text-base text-slate-600 dark:text-slate-300">0</td>
+        <td class="px-4 py-4 font-bold text-emerald-600 dark:text-emerald-400 text-base">22</td>
     </tr>
     
     <tr class="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50">
-        <td class="px-4 py-3 font-medium text-slate-800 dark:text-white">LinkedIn Outreach</td>
-        <td class="px-4 py-3">5</td><td class="px-4 py-3">0</td><td class="px-4 py-3">2</td><td class="px-4 py-3">2</td><td class="px-4 py-3">1</td><td class="px-4 py-3">1</td><td class="px-4 py-3">4</td><td class="px-4 py-3">1</td>
-        <td class="px-4 py-3 font-bold text-emerald-600 dark:text-emerald-400">16</td>
+        <td class="px-4 py-4 font-medium text-slate-800 dark:text-white text-base">LinkedIn Outreach</td>
+        <td class="px-4 py-4 text-base text-slate-600 dark:text-slate-300">5</td><td class="px-4 py-4 text-base text-slate-600 dark:text-slate-300">0</td><td class="px-4 py-4 text-base text-slate-600 dark:text-slate-300">2</td><td class="px-4 py-4 text-base text-slate-600 dark:text-slate-300">2</td><td class="px-4 py-4 text-base text-slate-600 dark:text-slate-300">1</td><td class="px-4 py-4 text-base text-slate-600 dark:text-slate-300">1</td><td class="px-4 py-4 text-base text-slate-600 dark:text-slate-300">4</td><td class="px-4 py-4 text-base text-slate-600 dark:text-slate-300">1</td>
+        <td class="px-4 py-4 font-bold text-emerald-600 dark:text-emerald-400 text-base">16</td>
     </tr>
     
     <tr class="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50">
-        <td class="px-4 py-3 font-medium text-slate-800 dark:text-white">Referral</td>
-        <td class="px-4 py-3">5</td><td class="px-4 py-3">7</td><td class="px-4 py-3">4</td><td class="px-4 py-3">3</td><td class="px-4 py-3">2</td><td class="px-4 py-3">3</td><td class="px-4 py-3">2</td><td class="px-4 py-3">4</td>
-        <td class="px-4 py-3 font-bold text-emerald-600 dark:text-emerald-400">30</td>
+        <td class="px-4 py-4 font-medium text-slate-800 dark:text-white text-base">Referral</td>
+        <td class="px-4 py-4 text-base text-slate-600 dark:text-slate-300">5</td><td class="px-4 py-4 text-base text-slate-600 dark:text-slate-300">7</td><td class="px-4 py-4 text-base text-slate-600 dark:text-slate-300">4</td><td class="px-4 py-4 text-base text-slate-600 dark:text-slate-300">3</td><td class="px-4 py-4 text-base text-slate-600 dark:text-slate-300">2</td><td class="px-4 py-4 text-base text-slate-600 dark:text-slate-300">3</td><td class="px-4 py-4 text-base text-slate-600 dark:text-slate-300">2</td><td class="px-4 py-4 text-base text-slate-600 dark:text-slate-300">4</td>
+        <td class="px-4 py-4 font-bold text-emerald-600 dark:text-emerald-400 text-base">30</td>
     </tr>
     
     <tr class="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50">
-        <td class="px-4 py-3 font-medium text-slate-800 dark:text-white">Webinar</td>
-        <td class="px-4 py-3">3</td><td class="px-4 py-3">6</td><td class="px-4 py-3">3</td><td class="px-4 py-3">4</td><td class="px-4 py-3">2</td><td class="px-4 py-3">3</td><td class="px-4 py-3">1</td><td class="px-4 py-3">0</td>
-        <td class="px-4 py-3 font-bold text-emerald-600 dark:text-emerald-400">22</td>
+        <td class="px-4 py-4 font-medium text-slate-800 dark:text-white text-base">Webinar</td>
+        <td class="px-4 py-4 text-base text-slate-600 dark:text-slate-300">3</td><td class="px-4 py-4 text-base text-slate-600 dark:text-slate-300">6</td><td class="px-4 py-4 text-base text-slate-600 dark:text-slate-300">3</td><td class="px-4 py-4 text-base text-slate-600 dark:text-slate-300">4</td><td class="px-4 py-4 text-base text-slate-600 dark:text-slate-300">2</td><td class="px-4 py-4 text-base text-slate-600 dark:text-slate-300">3</td><td class="px-4 py-4 text-base text-slate-600 dark:text-slate-300">1</td><td class="px-4 py-4 text-base text-slate-600 dark:text-slate-300">0</td>
+        <td class="px-4 py-4 font-bold text-emerald-600 dark:text-emerald-400 text-base">22</td>
     </tr>
     
     <tr class="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50">
-        <td class="px-4 py-3 font-medium text-slate-800 dark:text-white">Website Form</td>
-        <td class="px-4 py-3">8</td><td class="px-4 py-3">3</td><td class="px-4 py-3">1</td><td class="px-4 py-3">1</td><td class="px-4 py-3">7</td><td class="px-4 py-3">1</td><td class="px-4 py-3">2</td><td class="px-4 py-3">0</td>
-        <td class="px-4 py-3 font-bold text-emerald-600 dark:text-emerald-400">23</td>
+        <td class="px-4 py-4 font-medium text-slate-800 dark:text-white text-base">Website Form</td>
+        <td class="px-4 py-4 text-base text-slate-600 dark:text-slate-300">8</td><td class="px-4 py-4 text-base text-slate-600 dark:text-slate-300">3</td><td class="px-4 py-4 text-base text-slate-600 dark:text-slate-300">1</td><td class="px-4 py-4 text-base text-slate-600 dark:text-slate-300">1</td><td class="px-4 py-4 text-base text-slate-600 dark:text-slate-300">7</td><td class="px-4 py-4 text-base text-slate-600 dark:text-slate-300">1</td><td class="px-4 py-4 text-base text-slate-600 dark:text-slate-300">2</td><td class="px-4 py-4 text-base text-slate-600 dark:text-slate-300">0</td>
+        <td class="px-4 py-4 font-bold text-emerald-600 dark:text-emerald-400 text-base">23</td>
     </tr>
     
                     </tbody>
@@ -166,7 +167,8 @@
         document.addEventListener('DOMContentLoaded', function() {
             const toggleBtn = document.getElementById('theme-toggle');
             toggleBtn.addEventListener('click', function() {
-                document.documentElement.classList.toggle('dark');
+                const isDark = document.documentElement.classList.toggle('dark');
+                updateChartColors(isDark);
             });
         });
 
@@ -181,48 +183,76 @@
             closed: {"Instagram Ad": 5, "Facebook Ad": 3, "Website Form": 1, "Referral": 3, "Google Search": 4, "Billboard": 4, "Webinar": 4, "LinkedIn Outreach": 2, "Cold Email": 2}
         };
 
+        // --- SEPARATE COLOR PROFILES ---
+        // Dark Mode (Default)
+        let currentLabelColor = '#ffffff'; 
+        let currentTickColor = '#94a3b8';
+
+        // Base options (NO layout padding here, we set it per chart)
         const commonOptions = {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
-                legend: { labels: { color: '#64748b' } },
+                legend: { labels: { color: currentTickColor } },
                 datalabels: {
-                    color: '#ffffff',
+                    color: currentLabelColor,
                     anchor: 'end',
                     align: 'top',
-                    font: { weight: 'bold', size: 10 }
+                    font: { weight: 'bold', size: 13 }
                 }
             },
             scales: {
-                x: { 
-                    ticks: { color: '#64748b' }, 
-                    grid: { display: false }
-                },
-                y: { 
-                    ticks: { color: '#64748b' }, 
-                    grid: { display: false }
-                }
+                x: { ticks: { color: currentTickColor, font: { size: 11 } }, grid: { display: false } },
+                y: { ticks: { color: currentTickColor, font: { size: 12, weight: '500' } }, grid: { display: false } }
             }
         };
 
-        new Chart(document.getElementById('volumeChart'), {
+        // Chart 1: Vertical Bar (Needs top padding for the "30")
+        const volumeChart = new Chart(document.getElementById('volumeChart'), {
             type: 'bar',
             data: { labels: Object.keys(volumeData), datasets: [{ label: 'Leads', data: Object.values(volumeData), backgroundColor: '#3b82f6', borderRadius: 4 }] },
-            options: { ...commonOptions, plugins: { ...commonOptions.plugins, legend: { display: false } } }
+            options: { 
+                ...commonOptions, 
+                layout: { padding: { top: 30, right: 10, left: 10, bottom: 10 } },
+                plugins: { ...commonOptions.plugins, legend: { display: false } } 
+            }
         });
 
-        new Chart(document.getElementById('revenueChart'), {
+        // Chart 4: Horizontal Bar (Needs right padding for "$176,500")
+        const revenueChart = new Chart(document.getElementById('revenueChart'), {
             type: 'bar',
             data: { labels: Object.keys(revenueData), datasets: [{ label: 'Revenue', data: Object.values(revenueData), backgroundColor: '#10b981', borderRadius: 4 }] },
             options: { 
                 ...commonOptions, 
                 indexAxis: 'y', 
-                plugins: { ...commonOptions.plugins, legend: { display: false }, datalabels: { ...commonOptions.plugins.datalabels, formatter: (val) => '$' + val.toLocaleString() } },
+                layout: { padding: { top: 10, right: 80, left: 10, bottom: 10 } }, 
+                plugins: { 
+                    ...commonOptions.plugins, 
+                    legend: { display: false }, 
+                    datalabels: { 
+                        ...commonOptions.plugins.datalabels, 
+                        formatter: (val) => '$' + val.toLocaleString(),
+                        anchor: 'end',
+                        align: 'end',
+                        offset: 5
+                    } 
+                },
+                scales: {
+                    x: { 
+                        ...commonOptions.scales.x,
+                        ticks: { 
+                            ...commonOptions.scales.x.ticks, 
+                            callback: (val) => '$' + val/1000 + 'k' 
+                        } 
+                    },
+                    y: { ...commonOptions.scales.y }
+                }
             }
         });
 
+        // Chart 2: Grouped Vertical Bar (Standard padding)
         const sources = Object.keys(efficiencyData.leads);
-        new Chart(document.getElementById('efficiencyChart'), {
+        const efficiencyChart = new Chart(document.getElementById('efficiencyChart'), {
             type: 'bar',
             data: {
                 labels: sources,
@@ -234,7 +264,8 @@
             options: { ...commonOptions }
         });
 
-        new Chart(document.getElementById('funnelChart'), {
+        // Chart 3: Horizontal Funnel (Needs right padding for the "44")
+        const funnelChart = new Chart(document.getElementById('funnelChart'), {
             type: 'bar',
             data: {
                 labels: funnelData.map(d => d.stage),
@@ -243,9 +274,25 @@
             options: { 
                 ...commonOptions, 
                 indexAxis: 'y', 
+                layout: { padding: { top: 10, right: 40, left: 10, bottom: 10 } }, 
                 plugins: { ...commonOptions.plugins, legend: { display: false }, datalabels: { ...commonOptions.plugins.datalabels, anchor: 'end', align: 'end' } }
             }
         });
+
+        // Function to swap color profiles instantly
+        function updateChartColors(isDark) {
+            currentLabelColor = isDark ? '#ffffff' : '#1e293b'; 
+            currentTickColor = isDark ? '#94a3b8' : '#64748b';
+
+            const charts = [volumeChart, revenueChart, efficiencyChart, funnelChart];
+            charts.forEach(chart => {
+                chart.options.plugins.datalabels.color = currentLabelColor;
+                chart.options.scales.x.ticks.color = currentTickColor;
+                chart.options.scales.y.ticks.color = currentTickColor;
+                chart.options.plugins.legend.labels.color = currentTickColor;
+                chart.update();
+            });
+        }
     </script>
 </body>
 </html>

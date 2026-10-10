@@ -53,29 +53,29 @@ funnel_json = json.dumps([{"stage": k, "count": v} for k, v in sorted_funnel])
 table_sources = sorted(volume_by_source.keys())
 table_stages = ["Qualified Opt In", "Booked call", "Follow Up", "Closed", "Disqualified", "No Show", "Lost", "Cancelled"]
 
-# --- FIX: Pre-calculate the HTML for the table to avoid f-string syntax errors ---
-th_tags = "".join([f'<th scope="col" class="px-4 py-3">{stage}</th>' for stage in table_stages])
+# Pre-calculate the HTML for the table
+th_tags = "".join([f'<th scope="col" class="px-4 py-3 text-xs">{stage}</th>' for stage in table_stages])
 table_header_html = f"""
 <tr>
-    <th scope="col" class="px-4 py-3 rounded-l-lg">Source</th>
+    <th scope="col" class="px-4 py-3 rounded-l-lg text-xs">Source</th>
     {th_tags}
-    <th scope="col" class="px-4 py-3 rounded-r-lg">Total</th>
+    <th scope="col" class="px-4 py-3 rounded-r-lg text-xs">Total</th>
 </tr>
 """
 
+# FIXED: Changed table text to 'text-base' (16px) for better readability, matching chart label size but not bold.
 rows = []
 for source in table_sources:
-    tds = "".join([f'<td class="px-4 py-3">{stage_counts_by_source[source].get(stage, 0)}</td>' for stage in table_stages])
+    tds = "".join([f'<td class="px-4 py-4 text-base text-slate-600 dark:text-slate-300">{stage_counts_by_source[source].get(stage, 0)}</td>' for stage in table_stages])
     row = f"""
     <tr class="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50">
-        <td class="px-4 py-3 font-medium text-slate-800 dark:text-white">{source}</td>
+        <td class="px-4 py-4 font-medium text-slate-800 dark:text-white text-base">{source}</td>
         {tds}
-        <td class="px-4 py-3 font-bold text-emerald-600 dark:text-emerald-400">{volume_by_source[source]}</td>
+        <td class="px-4 py-4 font-bold text-emerald-600 dark:text-emerald-400 text-base">{volume_by_source[source]}</td>
     </tr>
     """
     rows.append(row)
 table_body_html = "".join(rows)
-# -----------------------------------------------------------------------------
 
 # 3. Generate the HTML
 html_content = f"""
@@ -93,7 +93,7 @@ html_content = f"""
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
     <style>
         body {{ font-family: 'Inter', sans-serif; transition: background-color 0.3s, color 0.3s; }}
-        .chart-container {{ position: relative; height: 300px; width: 100%; }}
+        .chart-container {{ position: relative; height: 350px; width: 100%; }}
     </style>
 </head>
 <body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 p-6 min-h-screen">
@@ -118,22 +118,22 @@ html_content = f"""
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
             <div class="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
                 <p class="text-slate-500 dark:text-slate-400 text-xs font-semibold uppercase tracking-wider">Top Volume Source</p>
-                <p class="text-2xl font-bold text-slate-800 dark:text-white mt-1">{top_volume_source}</p>
-                <p class="text-emerald-600 dark:text-emerald-400 text-sm mt-1">{top_volume_amount} leads</p>
+                <p class="text-3xl font-extrabold text-slate-800 dark:text-white mt-1">{top_volume_source}</p>
+                <p class="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1">{top_volume_amount} <span class="text-sm font-medium text-slate-500 dark:text-slate-400">leads</span></p>
             </div>
             <div class="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
                 <p class="text-slate-500 dark:text-slate-400 text-xs font-semibold uppercase tracking-wider">Top Revenue Source</p>
-                <p class="text-2xl font-bold text-slate-800 dark:text-white mt-1">{top_revenue_source}</p>
-                <p class="text-emerald-600 dark:text-emerald-400 text-sm mt-1">${top_revenue_amount:,.0f}</p>
+                <p class="text-3xl font-extrabold text-slate-800 dark:text-white mt-1">{top_revenue_source}</p>
+                <p class="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1">${top_revenue_amount:,.0f}</p>
             </div>
             <div class="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
                 <p class="text-slate-500 dark:text-slate-400 text-xs font-semibold uppercase tracking-wider">Total Sources Tracked</p>
-                <p class="text-2xl font-bold text-slate-800 dark:text-white mt-1">{len(volume_by_source)}</p>
+                <p class="text-3xl font-extrabold text-slate-800 dark:text-white mt-1">{len(volume_by_source)}</p>
                 <p class="text-slate-500 dark:text-slate-400 text-sm mt-1">Channels active</p>
             </div>
             <div class="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
                 <p class="text-slate-500 dark:text-slate-400 text-xs font-semibold uppercase tracking-wider">Data Integrity</p>
-                <p class="text-2xl font-bold text-slate-800 dark:text-white mt-1">94%</p>
+                <p class="text-3xl font-extrabold text-slate-800 dark:text-white mt-1">94%</p>
                 <p class="text-slate-500 dark:text-slate-400 text-sm mt-1">Valid records kept</p>
             </div>
         </div>
@@ -168,7 +168,8 @@ html_content = f"""
         <div class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm mb-6">
             <h2 class="text-lg font-semibold text-slate-800 dark:text-white mb-4">Pipeline Progression: 8-Stage Breakdown by Source</h2>
             <div class="overflow-x-auto">
-                <table class="w-full text-sm text-left text-slate-600 dark:text-slate-300">
+                <!-- FIXED: Changed text-sm to text-base for larger, cleaner numbers -->
+                <table class="w-full text-base text-left text-slate-600 dark:text-slate-300">
                     <thead class="text-xs text-slate-500 dark:text-slate-400 uppercase bg-slate-50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-700">
                         {table_header_html}
                     </thead>
@@ -186,7 +187,8 @@ html_content = f"""
         document.addEventListener('DOMContentLoaded', function() {{
             const toggleBtn = document.getElementById('theme-toggle');
             toggleBtn.addEventListener('click', function() {{
-                document.documentElement.classList.toggle('dark');
+                const isDark = document.documentElement.classList.toggle('dark');
+                updateChartColors(isDark);
             }});
         }});
 
@@ -201,48 +203,76 @@ html_content = f"""
             closed: {json.dumps(dict(closed_deals_by_source))}
         }};
 
+        // --- SEPARATE COLOR PROFILES ---
+        // Dark Mode (Default)
+        let currentLabelColor = '#ffffff'; 
+        let currentTickColor = '#94a3b8';
+
+        // Base options (NO layout padding here, we set it per chart)
         const commonOptions = {{
             responsive: true,
             maintainAspectRatio: false,
             plugins: {{
-                legend: {{ labels: {{ color: '#64748b' }} }},
+                legend: {{ labels: {{ color: currentTickColor }} }},
                 datalabels: {{
-                    color: '#ffffff',
+                    color: currentLabelColor,
                     anchor: 'end',
                     align: 'top',
-                    font: {{ weight: 'bold', size: 10 }}
+                    font: {{ weight: 'bold', size: 13 }}
                 }}
             }},
             scales: {{
-                x: {{ 
-                    ticks: {{ color: '#64748b' }}, 
-                    grid: {{ display: false }}
-                }},
-                y: {{ 
-                    ticks: {{ color: '#64748b' }}, 
-                    grid: {{ display: false }}
-                }}
+                x: {{ ticks: {{ color: currentTickColor, font: {{ size: 11 }} }}, grid: {{ display: false }} }},
+                y: {{ ticks: {{ color: currentTickColor, font: {{ size: 12, weight: '500' }} }}, grid: {{ display: false }} }}
             }}
         }};
 
-        new Chart(document.getElementById('volumeChart'), {{
+        // Chart 1: Vertical Bar (Needs top padding for the "30")
+        const volumeChart = new Chart(document.getElementById('volumeChart'), {{
             type: 'bar',
             data: {{ labels: Object.keys(volumeData), datasets: [{{ label: 'Leads', data: Object.values(volumeData), backgroundColor: '#3b82f6', borderRadius: 4 }}] }},
-            options: {{ ...commonOptions, plugins: {{ ...commonOptions.plugins, legend: {{ display: false }} }} }}
+            options: {{ 
+                ...commonOptions, 
+                layout: {{ padding: {{ top: 30, right: 10, left: 10, bottom: 10 }} }},
+                plugins: {{ ...commonOptions.plugins, legend: {{ display: false }} }} 
+            }}
         }});
 
-        new Chart(document.getElementById('revenueChart'), {{
+        // Chart 4: Horizontal Bar (Needs right padding for "$176,500")
+        const revenueChart = new Chart(document.getElementById('revenueChart'), {{
             type: 'bar',
             data: {{ labels: Object.keys(revenueData), datasets: [{{ label: 'Revenue', data: Object.values(revenueData), backgroundColor: '#10b981', borderRadius: 4 }}] }},
             options: {{ 
                 ...commonOptions, 
                 indexAxis: 'y', 
-                plugins: {{ ...commonOptions.plugins, legend: {{ display: false }}, datalabels: {{ ...commonOptions.plugins.datalabels, formatter: (val) => '$' + val.toLocaleString() }} }},
+                layout: {{ padding: {{ top: 10, right: 80, left: 10, bottom: 10 }} }}, 
+                plugins: {{ 
+                    ...commonOptions.plugins, 
+                    legend: {{ display: false }}, 
+                    datalabels: {{ 
+                        ...commonOptions.plugins.datalabels, 
+                        formatter: (val) => '$' + val.toLocaleString(),
+                        anchor: 'end',
+                        align: 'end',
+                        offset: 5
+                    }} 
+                }},
+                scales: {{
+                    x: {{ 
+                        ...commonOptions.scales.x,
+                        ticks: {{ 
+                            ...commonOptions.scales.x.ticks, 
+                            callback: (val) => '$' + val/1000 + 'k' 
+                        }} 
+                    }},
+                    y: {{ ...commonOptions.scales.y }}
+                }}
             }}
         }});
 
+        // Chart 2: Grouped Vertical Bar (Standard padding)
         const sources = Object.keys(efficiencyData.leads);
-        new Chart(document.getElementById('efficiencyChart'), {{
+        const efficiencyChart = new Chart(document.getElementById('efficiencyChart'), {{
             type: 'bar',
             data: {{
                 labels: sources,
@@ -254,7 +284,8 @@ html_content = f"""
             options: {{ ...commonOptions }}
         }});
 
-        new Chart(document.getElementById('funnelChart'), {{
+        // Chart 3: Horizontal Funnel (Needs right padding for the "44")
+        const funnelChart = new Chart(document.getElementById('funnelChart'), {{
             type: 'bar',
             data: {{
                 labels: funnelData.map(d => d.stage),
@@ -263,9 +294,25 @@ html_content = f"""
             options: {{ 
                 ...commonOptions, 
                 indexAxis: 'y', 
+                layout: {{ padding: {{ top: 10, right: 40, left: 10, bottom: 10 }} }}, 
                 plugins: {{ ...commonOptions.plugins, legend: {{ display: false }}, datalabels: {{ ...commonOptions.plugins.datalabels, anchor: 'end', align: 'end' }} }}
             }}
         }});
+
+        // Function to swap color profiles instantly
+        function updateChartColors(isDark) {{
+            currentLabelColor = isDark ? '#ffffff' : '#1e293b'; 
+            currentTickColor = isDark ? '#94a3b8' : '#64748b';
+
+            const charts = [volumeChart, revenueChart, efficiencyChart, funnelChart];
+            charts.forEach(chart => {{
+                chart.options.plugins.datalabels.color = currentLabelColor;
+                chart.options.scales.x.ticks.color = currentTickColor;
+                chart.options.scales.y.ticks.color = currentTickColor;
+                chart.options.plugins.legend.labels.color = currentTickColor;
+                chart.update();
+            }});
+        }}
     </script>
 </body>
 </html>
