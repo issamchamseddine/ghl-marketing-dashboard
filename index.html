@@ -1,0 +1,251 @@
+
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marketing Performance Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = { darkMode: 'class' }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; transition: background-color 0.3s, color 0.3s; }
+        .chart-container { position: relative; height: 300px; width: 100%; }
+    </style>
+</head>
+<body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 p-6 min-h-screen">
+    <div class="max-w-7xl mx-auto">
+        <!-- Header -->
+        <div class="mb-8 flex justify-between items-center flex-wrap gap-4">
+            <div>
+                <h1 class="text-3xl font-bold text-slate-800 dark:text-white">Marketing Performance Dashboard</h1>
+                <p class="text-slate-500 dark:text-slate-400 mt-1 text-sm">Data Quality: 306 valid leads analyzed. 15 internal & 48 untagged records excluded.</p>
+            </div>
+            <div class="flex items-center gap-3">
+                <span class="px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 border border-blue-200 dark:border-blue-700">
+                    Snapshot: October 10, 2026
+                </span>
+                <button id="theme-toggle" class="px-4 py-2 rounded-lg bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 text-sm font-medium hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 transition shadow-sm cursor-pointer">
+                    Toggle Theme
+                </button>
+            </div>
+        </div>
+
+        <!-- KPI Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            <div class="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+                <p class="text-slate-500 dark:text-slate-400 text-xs font-semibold uppercase tracking-wider">Top Volume Source</p>
+                <p class="text-2xl font-bold text-slate-800 dark:text-white mt-1">Referral</p>
+                <p class="text-emerald-600 dark:text-emerald-400 text-sm mt-1">30 leads</p>
+            </div>
+            <div class="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+                <p class="text-slate-500 dark:text-slate-400 text-xs font-semibold uppercase tracking-wider">Top Revenue Source</p>
+                <p class="text-2xl font-bold text-slate-800 dark:text-white mt-1">Instagram Ad</p>
+                <p class="text-emerald-600 dark:text-emerald-400 text-sm mt-1">$176,500</p>
+            </div>
+            <div class="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+                <p class="text-slate-500 dark:text-slate-400 text-xs font-semibold uppercase tracking-wider">Total Sources Tracked</p>
+                <p class="text-2xl font-bold text-slate-800 dark:text-white mt-1">9</p>
+                <p class="text-slate-500 dark:text-slate-400 text-sm mt-1">Channels active</p>
+            </div>
+            <div class="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+                <p class="text-slate-500 dark:text-slate-400 text-xs font-semibold uppercase tracking-wider">Data Integrity</p>
+                <p class="text-2xl font-bold text-slate-800 dark:text-white mt-1">94%</p>
+                <p class="text-slate-500 dark:text-slate-400 text-sm mt-1">Valid records kept</p>
+            </div>
+        </div>
+
+        <!-- Charts Row 1 -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <div class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+                <h2 class="text-lg font-semibold text-slate-800 dark:text-white mb-4">1. Lead Volume by Source</h2>
+                <div class="chart-container"><canvas id="volumeChart"></canvas></div>
+            </div>
+            <div class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+                <h2 class="text-lg font-semibold text-slate-800 dark:text-white mb-4">4. Closed Revenue by Source</h2>
+                <div class="chart-container"><canvas id="revenueChart"></canvas></div>
+            </div>
+        </div>
+
+        <!-- Charts Row 2 -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <div class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+                <h2 class="text-lg font-semibold text-slate-800 dark:text-white mb-4">2. Source Efficiency (Leads vs. Closed Deals)</h2>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">Identify high-ROI sources for next month's budget.</p>
+                <div class="chart-container"><canvas id="efficiencyChart"></canvas></div>
+            </div>
+            <div class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+                <h2 class="text-lg font-semibold text-slate-800 dark:text-white mb-4">3. Stage-to-Stage Conversion Funnel</h2>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">Where leads move and where they drop.</p>
+                <div class="chart-container"><canvas id="funnelChart"></canvas></div>
+            </div>
+        </div>
+
+        <!-- Pipeline Table -->
+        <div class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm mb-6">
+            <h2 class="text-lg font-semibold text-slate-800 dark:text-white mb-4">Pipeline Progression: 8-Stage Breakdown by Source</h2>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm text-left text-slate-600 dark:text-slate-300">
+                    <thead class="text-xs text-slate-500 dark:text-slate-400 uppercase bg-slate-50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-700">
+                        
+<tr>
+    <th scope="col" class="px-4 py-3 rounded-l-lg">Source</th>
+    <th scope="col" class="px-4 py-3">Qualified Opt In</th><th scope="col" class="px-4 py-3">Booked call</th><th scope="col" class="px-4 py-3">Follow Up</th><th scope="col" class="px-4 py-3">Closed</th><th scope="col" class="px-4 py-3">Disqualified</th><th scope="col" class="px-4 py-3">No Show</th><th scope="col" class="px-4 py-3">Lost</th><th scope="col" class="px-4 py-3">Cancelled</th>
+    <th scope="col" class="px-4 py-3 rounded-r-lg">Total</th>
+</tr>
+
+                    </thead>
+                    <tbody>
+                        
+    <tr class="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50">
+        <td class="px-4 py-3 font-medium text-slate-800 dark:text-white">Billboard</td>
+        <td class="px-4 py-3">4</td><td class="px-4 py-3">5</td><td class="px-4 py-3">5</td><td class="px-4 py-3">4</td><td class="px-4 py-3">1</td><td class="px-4 py-3">2</td><td class="px-4 py-3">2</td><td class="px-4 py-3">1</td>
+        <td class="px-4 py-3 font-bold text-emerald-600 dark:text-emerald-400">24</td>
+    </tr>
+    
+    <tr class="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50">
+        <td class="px-4 py-3 font-medium text-slate-800 dark:text-white">Cold Email</td>
+        <td class="px-4 py-3">3</td><td class="px-4 py-3">2</td><td class="px-4 py-3">5</td><td class="px-4 py-3">2</td><td class="px-4 py-3">5</td><td class="px-4 py-3">3</td><td class="px-4 py-3">0</td><td class="px-4 py-3">2</td>
+        <td class="px-4 py-3 font-bold text-emerald-600 dark:text-emerald-400">22</td>
+    </tr>
+    
+    <tr class="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50">
+        <td class="px-4 py-3 font-medium text-slate-800 dark:text-white">Facebook Ad</td>
+        <td class="px-4 py-3">4</td><td class="px-4 py-3">5</td><td class="px-4 py-3">2</td><td class="px-4 py-3">3</td><td class="px-4 py-3">2</td><td class="px-4 py-3">4</td><td class="px-4 py-3">2</td><td class="px-4 py-3">2</td>
+        <td class="px-4 py-3 font-bold text-emerald-600 dark:text-emerald-400">24</td>
+    </tr>
+    
+    <tr class="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50">
+        <td class="px-4 py-3 font-medium text-slate-800 dark:text-white">Google Search</td>
+        <td class="px-4 py-3">6</td><td class="px-4 py-3">5</td><td class="px-4 py-3">3</td><td class="px-4 py-3">4</td><td class="px-4 py-3">2</td><td class="px-4 py-3">0</td><td class="px-4 py-3">1</td><td class="px-4 py-3">0</td>
+        <td class="px-4 py-3 font-bold text-emerald-600 dark:text-emerald-400">21</td>
+    </tr>
+    
+    <tr class="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50">
+        <td class="px-4 py-3 font-medium text-slate-800 dark:text-white">Instagram Ad</td>
+        <td class="px-4 py-3">6</td><td class="px-4 py-3">1</td><td class="px-4 py-3">5</td><td class="px-4 py-3">5</td><td class="px-4 py-3">2</td><td class="px-4 py-3">1</td><td class="px-4 py-3">2</td><td class="px-4 py-3">0</td>
+        <td class="px-4 py-3 font-bold text-emerald-600 dark:text-emerald-400">22</td>
+    </tr>
+    
+    <tr class="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50">
+        <td class="px-4 py-3 font-medium text-slate-800 dark:text-white">LinkedIn Outreach</td>
+        <td class="px-4 py-3">5</td><td class="px-4 py-3">0</td><td class="px-4 py-3">2</td><td class="px-4 py-3">2</td><td class="px-4 py-3">1</td><td class="px-4 py-3">1</td><td class="px-4 py-3">4</td><td class="px-4 py-3">1</td>
+        <td class="px-4 py-3 font-bold text-emerald-600 dark:text-emerald-400">16</td>
+    </tr>
+    
+    <tr class="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50">
+        <td class="px-4 py-3 font-medium text-slate-800 dark:text-white">Referral</td>
+        <td class="px-4 py-3">5</td><td class="px-4 py-3">7</td><td class="px-4 py-3">4</td><td class="px-4 py-3">3</td><td class="px-4 py-3">2</td><td class="px-4 py-3">3</td><td class="px-4 py-3">2</td><td class="px-4 py-3">4</td>
+        <td class="px-4 py-3 font-bold text-emerald-600 dark:text-emerald-400">30</td>
+    </tr>
+    
+    <tr class="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50">
+        <td class="px-4 py-3 font-medium text-slate-800 dark:text-white">Webinar</td>
+        <td class="px-4 py-3">3</td><td class="px-4 py-3">6</td><td class="px-4 py-3">3</td><td class="px-4 py-3">4</td><td class="px-4 py-3">2</td><td class="px-4 py-3">3</td><td class="px-4 py-3">1</td><td class="px-4 py-3">0</td>
+        <td class="px-4 py-3 font-bold text-emerald-600 dark:text-emerald-400">22</td>
+    </tr>
+    
+    <tr class="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50">
+        <td class="px-4 py-3 font-medium text-slate-800 dark:text-white">Website Form</td>
+        <td class="px-4 py-3">8</td><td class="px-4 py-3">3</td><td class="px-4 py-3">1</td><td class="px-4 py-3">1</td><td class="px-4 py-3">7</td><td class="px-4 py-3">1</td><td class="px-4 py-3">2</td><td class="px-4 py-3">0</td>
+        <td class="px-4 py-3 font-bold text-emerald-600 dark:text-emerald-400">23</td>
+    </tr>
+    
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <p class="text-xs text-slate-400 dark:text-slate-500 text-center mt-8">Data Quality Note: Leads with missing contact info were retained for accurate volume tracking. Internal test records excluded.</p>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const toggleBtn = document.getElementById('theme-toggle');
+            toggleBtn.addEventListener('click', function() {
+                document.documentElement.classList.toggle('dark');
+            });
+        });
+
+        Chart.register(ChartDataLabels);
+
+        const volumeData = {"Facebook Ad": 24, "LinkedIn Outreach": 16, "Webinar": 22, "Instagram Ad": 22, "Billboard": 24, "Google Search": 21, "Website Form": 23, "Referral": 30, "Cold Email": 22};
+        const revenueData = {"Instagram Ad": 176500.0, "Facebook Ad": 152000.0, "Billboard": 40000.0, "Webinar": 33000.0, "LinkedIn Outreach": 20000.0, "Referral": 19250.0, "Google Search": 15500.0, "Cold Email": 13500.0, "Website Form": 11000.0};
+        const funnelData = [{"stage": "Qualified Opt In", "count": 44}, {"stage": "Booked call", "count": 34}, {"stage": "Follow Up", "count": 30}, {"stage": "Closed", "count": 28}, {"stage": "Disqualified", "count": 24}, {"stage": "No Show", "count": 18}, {"stage": "Lost", "count": 16}, {"stage": "Cancelled", "count": 10}];
+        
+        const efficiencyData = {
+            leads: {"Facebook Ad": 24, "LinkedIn Outreach": 16, "Webinar": 22, "Instagram Ad": 22, "Billboard": 24, "Google Search": 21, "Website Form": 23, "Referral": 30, "Cold Email": 22},
+            closed: {"Instagram Ad": 5, "Facebook Ad": 3, "Website Form": 1, "Referral": 3, "Google Search": 4, "Billboard": 4, "Webinar": 4, "LinkedIn Outreach": 2, "Cold Email": 2}
+        };
+
+        const commonOptions = {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { labels: { color: '#64748b' } },
+                datalabels: {
+                    color: '#ffffff',
+                    anchor: 'end',
+                    align: 'top',
+                    font: { weight: 'bold', size: 10 }
+                }
+            },
+            scales: {
+                x: { 
+                    ticks: { color: '#64748b' }, 
+                    grid: { display: false }
+                },
+                y: { 
+                    ticks: { color: '#64748b' }, 
+                    grid: { display: false }
+                }
+            }
+        };
+
+        new Chart(document.getElementById('volumeChart'), {
+            type: 'bar',
+            data: { labels: Object.keys(volumeData), datasets: [{ label: 'Leads', data: Object.values(volumeData), backgroundColor: '#3b82f6', borderRadius: 4 }] },
+            options: { ...commonOptions, plugins: { ...commonOptions.plugins, legend: { display: false } } }
+        });
+
+        new Chart(document.getElementById('revenueChart'), {
+            type: 'bar',
+            data: { labels: Object.keys(revenueData), datasets: [{ label: 'Revenue', data: Object.values(revenueData), backgroundColor: '#10b981', borderRadius: 4 }] },
+            options: { 
+                ...commonOptions, 
+                indexAxis: 'y', 
+                plugins: { ...commonOptions.plugins, legend: { display: false }, datalabels: { ...commonOptions.plugins.datalabels, formatter: (val) => '$' + val.toLocaleString() } },
+            }
+        });
+
+        const sources = Object.keys(efficiencyData.leads);
+        new Chart(document.getElementById('efficiencyChart'), {
+            type: 'bar',
+            data: {
+                labels: sources,
+                datasets: [
+                    { label: 'Total Leads', data: sources.map(s => efficiencyData.leads[s]), backgroundColor: '#3b82f6', borderRadius: 4 },
+                    { label: 'Deals Closed', data: sources.map(s => efficiencyData.closed[s] || 0), backgroundColor: '#10b981', borderRadius: 4 }
+                ]
+            },
+            options: { ...commonOptions }
+        });
+
+        new Chart(document.getElementById('funnelChart'), {
+            type: 'bar',
+            data: {
+                labels: funnelData.map(d => d.stage),
+                datasets: [{ data: funnelData.map(d => d.count), backgroundColor: '#6366f1', borderRadius: 4 }]
+            },
+            options: { 
+                ...commonOptions, 
+                indexAxis: 'y', 
+                plugins: { ...commonOptions.plugins, legend: { display: false }, datalabels: { ...commonOptions.plugins.datalabels, anchor: 'end', align: 'end' } }
+            }
+        });
+    </script>
+</body>
+</html>
