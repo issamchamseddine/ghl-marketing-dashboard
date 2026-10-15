@@ -2,324 +2,222 @@ import json
 from collections import defaultdict
 from datetime import datetime
 
-# 1. Load the clean data
-with open('clean_contacts.json', 'r', encoding='utf-8') as f:
+# ---------- 1. Load clean data ----------
+with open('clean_contacts.json', encoding='utf-8') as f:
     contacts = json.load(f)
-with open('clean_opportunities.json', 'r', encoding='utf-8') as f:
+with open('clean_opportunities.json', encoding='utf-8') as f:
     opps = json.load(f)
-with open('pipeline_stages.json', 'r', encoding='utf-8') as f:
+with open('pipeline_stages.json', encoding='utf-8') as f:
     stages_map = json.load(f)
 
-# 2. Process the data
-volume_by_source = defaultdict(int)
-revenue_by_source = defaultdict(float)
-closed_deals_by_source = defaultdict(int)
-stage_counts_by_source = defaultdict(lambda: defaultdict(int))
-total_stage_counts = defaultdict(int)
+PROGRESSION = ["Qualified Opt In", "Booked call", "Follow Up", "Closed"]
+EXITS = ["Disqualified", "No Show", "Lost", "Cancelled"]
+NOT_BUYABLE = {"Referral", "Website Form"}   # can't be scaled with ad budget
+MIN_DEALS = 5                                # below this, results are anecdotal
 
+# ---------- 2. Aggregate per source ----------
+S = defaultdict(lambda: {"leads": 0, "won": 0, "revenue": 0.0, "stages": defaultdict(int)})
+closed_not_won = 0
 for opp in opps:
-    source = opp.get('source') or 'Unknown'
-    stage_id = opp.get('pipelineStageId')
-    stage_name = stages_map.get(stage_id, 'Unknown Stage')
-    value = opp.get('monetaryValue', 0) or 0
-    status = opp.get('status', '')
+    src = opp.get('source') or 'Unknown'
+    stage = stages_map.get(opp.get('pipelineStageId'), 'Unknown Stage')
+    d = S[src]
+    d["leads"] += 1
+    d["stages"][stage] += 1
+    if opp.get('status') == 'won':           # revenue = won deals only
+        d["won"] += 1
+        d["revenue"] += opp.get('monetaryValue') or 0
+    elif stage == 'Closed':
+        closed_not_won += 1                  # sanity check, shown in footer
 
-    volume_by_source[source] += 1
-    stage_counts_by_source[source][stage_name] += 1
-    total_stage_counts[stage_name] += 1
-    
-    if status == 'won' or stage_name == 'Closed':
-        closed_deals_by_source[source] += 1
-        revenue_by_source[source] += value
+for d in S.values():
+    d["close_rate"] = d["won"] / d["leads"] if d["leads"] else 0
+    d["rpl"] = d["revenue"] / d["leads"] if d["leads"] else 0
+    d["avg_deal"] = d["revenue"] / d["won"] if d["won"] else 0
+    # Cumulative progression: "reached at least stage X"
+    d["reached"] = [d["leads"]] + [
+        sum(d["stages"].get(s, 0) for s in PROGRESSION[i:]) for i in range(len(PROGRESSION))
+    ]
 
-# Find Top Sources for KPI Cards
-top_revenue_source = max(revenue_by_source, key=revenue_by_source.get) if revenue_by_source else "N/A"
-top_revenue_amount = revenue_by_source[top_revenue_source] if top_revenue_source != "N/A" else 0
-top_volume_source = max(volume_by_source, key=volume_by_source.get) if volume_by_source else "N/A"
-top_volume_amount = volume_by_source[top_volume_source] if top_volume_source != "N/A" else 0
+total_leads = sum(d["leads"] for d in S.values())
+total_won = sum(d["won"] for d in S.values())
 
-# Sort data for charts
-sorted_revenue = dict(sorted(revenue_by_source.items(), key=lambda item: item[1], reverse=True))
-sorted_funnel = sorted(total_stage_counts.items(), key=lambda item: item[1], reverse=True)
+# ---------- 3. Budget recommendation ----------
+paid = sorted([s for s in S if s not in NOT_BUYABLE and s != 'Unknown'],
+              key=lambda s: S[s]["rpl"], reverse=True)
+n = len(paid)
+increase = paid[:max(1, n // 4)] if n else []
+review = paid[-max(1, n // 3):] if n >= 3 else []
+for s in S:
+    if s in NOT_BUYABLE:
+        S[s]["rec"] = "Not budget-driven"
+    elif s == 'Unknown':
+        S[s]["rec"] = "Fix tracking"
+    elif s in increase:
+        S[s]["rec"] = "Increase"
+    elif s in review:
+        S[s]["rec"] = "Review"
+    else:
+        S[s]["rec"] = "Hold"
 
-current_date = datetime.now().strftime("%B %d, %Y")
+BADGE = {"Increase": "bg-emerald-600", "Hold": "bg-blue-600", "Review": "bg-amber-600",
+         "Not budget-driven": "bg-slate-500", "Fix tracking": "bg-slate-500"}
 
-# Convert data to JSON strings for JS
-volume_json = json.dumps(dict(volume_by_source))
-revenue_json = json.dumps(sorted_revenue)
-funnel_json = json.dumps([{"stage": k, "count": v} for k, v in sorted_funnel])
+def names(rec):
+    items = [s for s in sorted(S, key=lambda x: S[x]["rpl"], reverse=True) if S[s]["rec"] == rec]
+    return ", ".join(items) or "None"
 
-# Prepare table data
-table_sources = sorted(volume_by_source.keys())
-table_stages = ["Qualified Opt In", "Booked call", "Follow Up", "Closed", "Disqualified", "No Show", "Lost", "Cancelled"]
+rec_panel = "".join(
+    f'<div class="rounded-lg p-4 {BADGE[r]} bg-opacity-20 border border-slate-300 dark:border-slate-600">'
+    f'<p class="text-xs font-semibold uppercase tracking-wider">{r}</p>'
+    f'<p class="text-lg font-bold mt-1">{names(r)}</p></div>'
+    for r in ["Increase", "Hold", "Review"])
 
-# Pre-calculate the HTML for the table
-th_tags = "".join([f'<th scope="col" class="px-4 py-3 text-xs">{stage}</th>' for stage in table_stages])
-table_header_html = f"""
-<tr>
-    <th scope="col" class="px-4 py-3 rounded-l-lg text-xs">Source</th>
-    {th_tags}
-    <th scope="col" class="px-4 py-3 rounded-r-lg text-xs">Total</th>
-</tr>
-"""
+low_sample = [s for s in S if S[s]["won"] < MIN_DEALS]
+tot_rev = sum(d["revenue"] for d in S.values())
+top2 = sum(sorted((d["revenue"] for d in S.values()))[-2:]) / tot_rev if tot_rev else 0
+caveat = (f"Caution: {len(low_sample)} of {len(S)} sources have fewer than {MIN_DEALS} won deals, "
+          f"and the top 2 sources hold {top2:.0%} of revenue. Treat these as directional, not final. "
+          "Ranking is by revenue per lead; there is no ad spend data, so cost efficiency is unknown.")
 
-# FIXED: Changed table text to 'text-base' (16px) for better readability, matching chart label size but not bold.
-rows = []
-for source in table_sources:
-    tds = "".join([f'<td class="px-4 py-4 text-base text-slate-600 dark:text-slate-300">{stage_counts_by_source[source].get(stage, 0)}</td>' for stage in table_stages])
-    row = f"""
-    <tr class="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50">
-        <td class="px-4 py-4 font-medium text-slate-800 dark:text-white text-base">{source}</td>
-        {tds}
-        <td class="px-4 py-4 font-bold text-emerald-600 dark:text-emerald-400 text-base">{volume_by_source[source]}</td>
-    </tr>
-    """
-    rows.append(row)
-table_body_html = "".join(rows)
+# ---------- 4. Tables ----------
+by_rpl = sorted(S, key=lambda s: S[s]["rpl"], reverse=True)
+rank_rows = "".join(f"""
+<tr class="border-b border-slate-200 dark:border-slate-700">
+  <td class="px-4 py-3 font-medium">{s}</td><td class="px-4 py-3">{S[s]['leads']}</td>
+  <td class="px-4 py-3">{S[s]['won']}</td><td class="px-4 py-3">{S[s]['close_rate']:.1%}</td>
+  <td class="px-4 py-3">${S[s]['revenue']:,.0f}</td><td class="px-4 py-3">${S[s]['rpl']:,.0f}</td>
+  <td class="px-4 py-3">${S[s]['avg_deal']:,.0f}</td>
+  <td class="px-4 py-3"><span class="px-2 py-1 rounded text-xs text-white {BADGE[S[s]['rec']]}">{S[s]['rec']}</span></td>
+</tr>""" for s in by_rpl)
 
-# 3. Generate the HTML
-html_content = f"""
-<!DOCTYPE html>
-<html lang="en" class="dark">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Marketing Performance Dashboard</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {{ darkMode: 'class' }}
-    </script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
-    <style>
-        body {{ font-family: 'Inter', sans-serif; transition: background-color 0.3s, color 0.3s; }}
-        .chart-container {{ position: relative; height: 350px; width: 100%; }}
-    </style>
-</head>
+def prog_cells(s):
+    r, out = S[s]["reached"], f'<td class="px-4 py-3 font-bold">{S[s]["reached"][0]}</td>'
+    for i in range(1, len(r)):
+        pct = r[i] / r[i - 1] if r[i - 1] else 0
+        out += (f'<td class="px-4 py-3" style="background:rgba(16,185,129,{0.08 + 0.5 * pct:.2f})">'
+                f'{r[i]} <span class="text-xs opacity-70">({pct:.0%})</span></td>')
+    return out + "".join(f'<td class="px-4 py-3">{S[s]["stages"].get(e, 0)}</td>' for e in EXITS)
+
+prog_head = "".join(f'<th class="px-4 py-3">{h}</th>' for h in
+                    ["Source", "Entered"] + PROGRESSION + EXITS)
+prog_rows = "".join(
+    f'<tr class="border-b border-slate-200 dark:border-slate-700">'
+    f'<td class="px-4 py-3 font-medium">{s}</td>{prog_cells(s)}</tr>' for s in sorted(S))
+
+known = set(PROGRESSION + EXITS)
+unmapped = sum(c for d in S.values() for st, c in d["stages"].items() if st not in known)
+warn = (f'<br><span class="text-amber-500">Warning: {unmapped} opportunities sit in stages not shown above (unrecognised stage name).</span>' if unmapped else "")
+unk = 'Untagged records appear as "Unknown".' if "Unknown" in S else ""
+
+# ---------- 5. Chart data (each sorted descending) ----------
+def series(key):
+    order = sorted(S, key=lambda s: S[s][key], reverse=True)
+    return {"labels": order, "values": [round(S[s][key], 4) for s in order]}
+
+DATA = json.dumps({k: series(k) for k in ["leads", "revenue", "rpl", "close_rate"]})
+top_vol = max(S, key=lambda s: S[s]["leads"])
+top_rev = max(S, key=lambda s: S[s]["revenue"])
+top_rpl = by_rpl[0]
+top_cr = max(S, key=lambda s: S[s]["close_rate"])
+
+# ---------- 6. HTML (plain template, no f-string brace escaping) ----------
+TEMPLATE = """<!DOCTYPE html>
+<html lang="en" class="dark"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Marketing Performance Dashboard</title>
+<script src="https://cdn.tailwindcss.com/3.4.17"></script>
+<script>tailwind.config = { darkMode: 'class' }</script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
+<style>body{font-family:'Inter',sans-serif}.cc{position:relative;height:340px;width:100%}</style></head>
 <body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 p-6 min-h-screen">
-    <div class="max-w-7xl mx-auto">
-        <!-- Header -->
-        <div class="mb-8 flex justify-between items-center flex-wrap gap-4">
-            <div>
-                <h1 class="text-3xl font-bold text-slate-800 dark:text-white">Marketing Performance Dashboard</h1>
-                <p class="text-slate-500 dark:text-slate-400 mt-1 text-sm">Data Quality: 306 valid leads analyzed. 15 internal & 48 untagged records excluded.</p>
-            </div>
-            <div class="flex items-center gap-3">
-                <span class="px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 border border-blue-200 dark:border-blue-700">
-                    Snapshot: {current_date}
-                </span>
-                <button id="theme-toggle" class="px-4 py-2 rounded-lg bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 text-sm font-medium hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 transition shadow-sm cursor-pointer">
-                    Toggle Theme
-                </button>
-            </div>
-        </div>
+<div class="max-w-7xl mx-auto">
+ <div class="mb-8 flex justify-between items-center flex-wrap gap-4">
+  <div><h1 class="text-3xl font-bold">Marketing Performance Dashboard</h1>
+   <p class="text-slate-500 dark:text-slate-400 mt-1 text-sm">__N__ opportunities across __K__ sources (from __C__ contacts loaded). __UNK__</p></div>
+  <div class="flex items-center gap-3">
+   <span class="px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 border border-blue-200 dark:border-blue-700">Static snapshot: __DATE__</span>
+   <button id="tt" class="px-4 py-2 rounded-lg bg-white dark:bg-slate-800 text-sm font-medium border border-slate-200 dark:border-slate-700 shadow-sm">Toggle Theme</button></div></div>
 
-        <!-- KPI Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-            <div class="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
-                <p class="text-slate-500 dark:text-slate-400 text-xs font-semibold uppercase tracking-wider">Top Volume Source</p>
-                <p class="text-3xl font-extrabold text-slate-800 dark:text-white mt-1">{top_volume_source}</p>
-                <p class="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1">{top_volume_amount} <span class="text-sm font-medium text-slate-500 dark:text-slate-400">leads</span></p>
-            </div>
-            <div class="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
-                <p class="text-slate-500 dark:text-slate-400 text-xs font-semibold uppercase tracking-wider">Top Revenue Source</p>
-                <p class="text-3xl font-extrabold text-slate-800 dark:text-white mt-1">{top_revenue_source}</p>
-                <p class="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1">${top_revenue_amount:,.0f}</p>
-            </div>
-            <div class="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
-                <p class="text-slate-500 dark:text-slate-400 text-xs font-semibold uppercase tracking-wider">Total Sources Tracked</p>
-                <p class="text-3xl font-extrabold text-slate-800 dark:text-white mt-1">{len(volume_by_source)}</p>
-                <p class="text-slate-500 dark:text-slate-400 text-sm mt-1">Channels active</p>
-            </div>
-            <div class="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
-                <p class="text-slate-500 dark:text-slate-400 text-xs font-semibold uppercase tracking-wider">Data Integrity</p>
-                <p class="text-3xl font-extrabold text-slate-800 dark:text-white mt-1">94%</p>
-                <p class="text-slate-500 dark:text-slate-400 text-sm mt-1">Valid records kept</p>
-            </div>
-        </div>
+ <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+  __KPIS__</div>
 
-        <!-- Charts Row 1 -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-            <div class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
-                <h2 class="text-lg font-semibold text-slate-800 dark:text-white mb-4">1. Lead Volume by Source</h2>
-                <div class="chart-container"><canvas id="volumeChart"></canvas></div>
-            </div>
-            <div class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
-                <h2 class="text-lg font-semibold text-slate-800 dark:text-white mb-4">4. Closed Revenue by Source</h2>
-                <div class="chart-container"><canvas id="revenueChart"></canvas></div>
-            </div>
-        </div>
+ <div class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm mb-6">
+  <h2 class="text-lg font-semibold mb-1">Where to put next month's budget</h2>
+  <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">Ranked by revenue per lead among budget-driven channels (Referral and Website Form excluded).</p>
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-3">__REC__</div>
+  <p class="text-xs text-amber-600 dark:text-amber-400">__CAVEAT__</p></div>
 
-        <!-- Charts Row 2 -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-            <div class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
-                <h2 class="text-lg font-semibold text-slate-800 dark:text-white mb-4">2. Source Efficiency (Leads vs. Closed Deals)</h2>
-                <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">Identify high-ROI sources for next month's budget.</p>
-                <div class="chart-container"><canvas id="efficiencyChart"></canvas></div>
-            </div>
-            <div class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
-                <h2 class="text-lg font-semibold text-slate-800 dark:text-white mb-4">3. Stage-to-Stage Conversion Funnel</h2>
-                <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">Where leads move and where they drop.</p>
-                <div class="chart-container"><canvas id="funnelChart"></canvas></div>
-            </div>
-        </div>
+ <div class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm mb-6">
+  <h2 class="text-lg font-semibold mb-4">Source scorecard</h2>
+  <div class="overflow-x-auto"><table class="w-full text-left text-sm">
+   <thead class="text-xs uppercase text-slate-500 dark:text-slate-400"><tr>
+    <th class="px-4 py-3">Source</th><th class="px-4 py-3">Leads</th><th class="px-4 py-3">Closed</th><th class="px-4 py-3">Close rate</th>
+    <th class="px-4 py-3">Revenue</th><th class="px-4 py-3">Revenue / lead</th><th class="px-4 py-3">Avg deal</th><th class="px-4 py-3">Action</th></tr></thead>
+   <tbody>__RANK__</tbody></table></div></div>
 
-        <!-- Pipeline Table -->
-        <div class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm mb-6">
-            <h2 class="text-lg font-semibold text-slate-800 dark:text-white mb-4">Pipeline Progression: 8-Stage Breakdown by Source</h2>
-            <div class="overflow-x-auto">
-                <!-- FIXED: Changed text-sm to text-base for larger, cleaner numbers -->
-                <table class="w-full text-base text-left text-slate-600 dark:text-slate-300">
-                    <thead class="text-xs text-slate-500 dark:text-slate-400 uppercase bg-slate-50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-700">
-                        {table_header_html}
-                    </thead>
-                    <tbody>
-                        {table_body_html}
-                    </tbody>
-                </table>
-            </div>
-        </div>
+ <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+  <div class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm"><h2 class="text-lg font-semibold mb-4">1. Lead Volume by Source</h2><div class="cc"><canvas id="c1"></canvas></div></div>
+  <div class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm"><h2 class="text-lg font-semibold mb-4">2. Closed Revenue by Source</h2><div class="cc"><canvas id="c2"></canvas></div></div>
+  <div class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm"><h2 class="text-lg font-semibold mb-4">3. Revenue per Lead</h2><div class="cc"><canvas id="c3"></canvas></div></div>
+  <div class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm"><h2 class="text-lg font-semibold mb-4">4. Close Rate by Source</h2><div class="cc"><canvas id="c4"></canvas></div></div></div>
 
-        <p class="text-xs text-slate-400 dark:text-slate-500 text-center mt-8">Data Quality Note: Leads with missing contact info were retained for accurate volume tracking. Internal test records excluded.</p>
-    </div>
+ <div class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm mb-6">
+  <h2 class="text-lg font-semibold mb-1">Pipeline progression and stage-to-stage conversion, by source</h2>
+  <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">Each cell = leads that reached at least that stage, with the % of the previous column in brackets. Exit outcomes are shown separately as current counts.</p>
+  <div class="overflow-x-auto"><table class="w-full text-left text-sm">
+   <thead class="text-xs uppercase text-slate-500 dark:text-slate-400"><tr>__PHEAD__</tr></thead>
+   <tbody>__PROWS__</tbody></table></div></div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {{
-            const toggleBtn = document.getElementById('theme-toggle');
-            toggleBtn.addEventListener('click', function() {{
-                const isDark = document.documentElement.classList.toggle('dark');
-                updateChartColors(isDark);
-            }});
-        }});
+ <p class="text-xs text-slate-400 dark:text-slate-500 text-center mt-8">Static snapshot taken __DATE__. Revenue counts won deals only (__CNW__ opportunities in the Closed stage are not marked won and are excluded).
+ Leads that exited (Disqualified, No Show, Lost, Cancelled) can't be placed in the sequence, so conversion rates are conservative.__WARN__</p>
+</div>
+<script>
+Chart.register(ChartDataLabels);
+const D = __DATA__;
+let tick = '#94a3b8', lab = '#ffffff';
+const charts = [];
+function mk(id, s, color, fmt) {
+  charts.push(new Chart(document.getElementById(id), {type: 'bar',
+    data: {labels: s.labels, datasets: [{data: s.values, backgroundColor: color, borderRadius: 4}]},
+    options: {indexAxis: 'y', responsive: true, maintainAspectRatio: false, layout: {padding: {right: 70}},
+      plugins: {legend: {display: false}, datalabels: {color: lab, anchor: 'end', align: 'end', formatter: fmt, font: {weight: 'bold', size: 12}}},
+      scales: {x: {ticks: {color: tick}, grid: {display: false}}, y: {ticks: {color: tick}, grid: {display: false}}}}}));
+}
+mk('c1', D.leads, '#3b82f6', v => v);
+mk('c2', D.revenue, '#10b981', v => '$' + v.toLocaleString());
+mk('c3', D.rpl, '#8b5cf6', v => '$' + Math.round(v).toLocaleString());
+mk('c4', D.close_rate, '#f59e0b', v => (v * 100).toFixed(1) + '%');
+document.getElementById('tt').addEventListener('click', () => {
+  const dark = document.documentElement.classList.toggle('dark');
+  lab = dark ? '#ffffff' : '#1e293b'; tick = dark ? '#94a3b8' : '#64748b';
+  charts.forEach(c => { c.options.plugins.datalabels.color = lab;
+    c.options.scales.x.ticks.color = tick; c.options.scales.y.ticks.color = tick; c.update(); });
+});
+</script></body></html>"""
 
-        Chart.register(ChartDataLabels);
+def kpi(title, big, sub):
+    return (f'<div class="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">'
+            f'<p class="text-slate-500 dark:text-slate-400 text-xs font-semibold uppercase tracking-wider">{title}</p>'
+            f'<p class="text-3xl font-extrabold mt-1">{big}</p>'
+            f'<p class="text-lg font-bold text-emerald-600 dark:text-emerald-400 mt-1">{sub}</p></div>')
 
-        const volumeData = {volume_json};
-        const revenueData = {revenue_json};
-        const funnelData = {funnel_json};
-        
-        const efficiencyData = {{
-            leads: {json.dumps(dict(volume_by_source))},
-            closed: {json.dumps(dict(closed_deals_by_source))}
-        }};
+kpis = (kpi("Top Volume Source", top_vol, f"{S[top_vol]['leads']} leads")
+        + kpi("Top Revenue Source", top_rev, f"${S[top_rev]['revenue']:,.0f}")
+        + kpi("Best Revenue / Lead", top_rpl, f"${S[top_rpl]['rpl']:,.0f}")
+        + kpi("Best Close Rate", top_cr, f"{S[top_cr]['close_rate']:.1%}"))
 
-        // --- SEPARATE COLOR PROFILES ---
-        // Dark Mode (Default)
-        let currentLabelColor = '#ffffff'; 
-        let currentTickColor = '#94a3b8';
+html = TEMPLATE
+for key, val in {
+    "__N__": total_leads, "__K__": len(S), "__C__": len(contacts),
+    "__DATE__": datetime.now().strftime("%B %d, %Y"), "__KPIS__": kpis,
+    "__REC__": rec_panel, "__CAVEAT__": caveat, "__RANK__": rank_rows,
+    "__PHEAD__": prog_head, "__PROWS__": prog_rows, "__CNW__": closed_not_won,
+    "__DATA__": DATA, "__WARN__": warn, "__UNK__": unk,
+}.items():
+    html = html.replace(key, str(val))
 
-        // Base options (NO layout padding here, we set it per chart)
-        const commonOptions = {{
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {{
-                legend: {{ labels: {{ color: currentTickColor }} }},
-                datalabels: {{
-                    color: currentLabelColor,
-                    anchor: 'end',
-                    align: 'top',
-                    font: {{ weight: 'bold', size: 13 }}
-                }}
-            }},
-            scales: {{
-                x: {{ ticks: {{ color: currentTickColor, font: {{ size: 11 }} }}, grid: {{ display: false }} }},
-                y: {{ ticks: {{ color: currentTickColor, font: {{ size: 12, weight: '500' }} }}, grid: {{ display: false }} }}
-            }}
-        }};
-
-        // Chart 1: Vertical Bar (Needs top padding for the "30")
-        const volumeChart = new Chart(document.getElementById('volumeChart'), {{
-            type: 'bar',
-            data: {{ labels: Object.keys(volumeData), datasets: [{{ label: 'Leads', data: Object.values(volumeData), backgroundColor: '#3b82f6', borderRadius: 4 }}] }},
-            options: {{ 
-                ...commonOptions, 
-                layout: {{ padding: {{ top: 30, right: 10, left: 10, bottom: 10 }} }},
-                plugins: {{ ...commonOptions.plugins, legend: {{ display: false }} }} 
-            }}
-        }});
-
-        // Chart 4: Horizontal Bar (Needs right padding for "$176,500")
-        const revenueChart = new Chart(document.getElementById('revenueChart'), {{
-            type: 'bar',
-            data: {{ labels: Object.keys(revenueData), datasets: [{{ label: 'Revenue', data: Object.values(revenueData), backgroundColor: '#10b981', borderRadius: 4 }}] }},
-            options: {{ 
-                ...commonOptions, 
-                indexAxis: 'y', 
-                layout: {{ padding: {{ top: 10, right: 80, left: 10, bottom: 10 }} }}, 
-                plugins: {{ 
-                    ...commonOptions.plugins, 
-                    legend: {{ display: false }}, 
-                    datalabels: {{ 
-                        ...commonOptions.plugins.datalabels, 
-                        formatter: (val) => '$' + val.toLocaleString(),
-                        anchor: 'end',
-                        align: 'end',
-                        offset: 5
-                    }} 
-                }},
-                scales: {{
-                    x: {{ 
-                        ...commonOptions.scales.x,
-                        ticks: {{ 
-                            ...commonOptions.scales.x.ticks, 
-                            callback: (val) => '$' + val/1000 + 'k' 
-                        }} 
-                    }},
-                    y: {{ ...commonOptions.scales.y }}
-                }}
-            }}
-        }});
-
-        // Chart 2: Grouped Vertical Bar (Standard padding)
-        const sources = Object.keys(efficiencyData.leads);
-        const efficiencyChart = new Chart(document.getElementById('efficiencyChart'), {{
-            type: 'bar',
-            data: {{
-                labels: sources,
-                datasets: [
-                    {{ label: 'Total Leads', data: sources.map(s => efficiencyData.leads[s]), backgroundColor: '#3b82f6', borderRadius: 4 }},
-                    {{ label: 'Deals Closed', data: sources.map(s => efficiencyData.closed[s] || 0), backgroundColor: '#10b981', borderRadius: 4 }}
-                ]
-            }},
-            options: {{ ...commonOptions }}
-        }});
-
-        // Chart 3: Horizontal Funnel (Needs right padding for the "44")
-        const funnelChart = new Chart(document.getElementById('funnelChart'), {{
-            type: 'bar',
-            data: {{
-                labels: funnelData.map(d => d.stage),
-                datasets: [{{ data: funnelData.map(d => d.count), backgroundColor: '#6366f1', borderRadius: 4 }}]
-            }},
-            options: {{ 
-                ...commonOptions, 
-                indexAxis: 'y', 
-                layout: {{ padding: {{ top: 10, right: 40, left: 10, bottom: 10 }} }}, 
-                plugins: {{ ...commonOptions.plugins, legend: {{ display: false }}, datalabels: {{ ...commonOptions.plugins.datalabels, anchor: 'end', align: 'end' }} }}
-            }}
-        }});
-
-        // Function to swap color profiles instantly
-        function updateChartColors(isDark) {{
-            currentLabelColor = isDark ? '#ffffff' : '#1e293b'; 
-            currentTickColor = isDark ? '#94a3b8' : '#64748b';
-
-            const charts = [volumeChart, revenueChart, efficiencyChart, funnelChart];
-            charts.forEach(chart => {{
-                chart.options.plugins.datalabels.color = currentLabelColor;
-                chart.options.scales.x.ticks.color = currentTickColor;
-                chart.options.scales.y.ticks.color = currentTickColor;
-                chart.options.plugins.legend.labels.color = currentTickColor;
-                chart.update();
-            }});
-        }}
-    </script>
-</body>
-</html>
-"""
-
-# 4. Save the HTML file
 with open('index.html', 'w', encoding='utf-8') as f:
-    f.write(html_content)
-
-print("Success! Open index.html in your browser.")
+    f.write(html)
+print(f"Success! {total_leads} opportunities, {len(S)} sources. Open index.html in your browser.")
